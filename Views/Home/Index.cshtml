@@ -1,23 +1,23 @@
 ﻿@{
     ViewData["Title"] = "Budget Calculator";
 }
-
-<div class="container mt-5">
-    <form id="dateRangeForm" class="form-inline justify-content-center" method="post">
-        <div class="form-row align-items-center">
-            <h2 class="text-info text-center">Budget Calculator</h2>
-            <div class="form-group mx-2 col-auto">
-                <label for="fromDate" class="sr-only">From Date:</label>
-                <input type="date" class="form-control" id="fromDate" name="fromDate" placeholder="From Date" required>
-            </div>
-            <div class="form-group mx-2 col-auto mb-2">
-                <label for="toDate" class="sr-only">To Date:</label>
-                <input type="date" class="form-control" id="toDate" name="toDate" placeholder="To Date" required>
-            </div>
-            <div class="form-group mx-2 col-auto mb-2">
-                <button type="button" class="btn btn-primary" onclick="generateTable()">Submit</button>
-            </div>
+<div class="container mt-3">
+    <div class="row">
+        <div class="text-center text-info"><h3>Budget Calculator</h3></div>
+        <div class="col-md-4 mb-3">
+            <label for="fromDate" class="sr-only">From Date:</label>
+            <input type="date" class="form-control" id="fromDate" name="fromDate" placeholder="From Date" required>
         </div>
-        <div id="tableContainer"></div>
-    </form>
-</div> 
+        <div class="col-md-4 mb-3">
+            <label for="toDate" class="sr-only">To Date:</label>
+            <input type="date" class="form-control" id="toDate" name="toDate" placeholder="To Date" required>
+        </div>
+        <div class="col-md-4 mt-0">
+            <button type="button" class="btn btn-primary" onclick="generateTable()">Submit</button>
+            <button id="exportBtn" onclick="ExportTable()" type="button" class="btn btn-success"><i class="fa-solid fa-file-export"></i></button>
+        </div>
+    </div>
+</div>
+<div id="tableContainer">
+
+</div>
