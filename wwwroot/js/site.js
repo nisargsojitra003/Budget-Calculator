@@ -5,7 +5,7 @@ var categories = [
     { name: 'Expense', type: 'expense' },
     { name: 'Fees', type: 'expense' }
 ];
-
+var monthNumber = undefined;
 //generate table after selecting from date and to date.
 function generateTable() {
     var fromDate = $('#fromDate').val();
@@ -19,6 +19,22 @@ function generateTable() {
     if (toDate <= fromDate) {
         alert('To Date must be greater than From Date.');
         return;
+    }
+
+    var fromdateNew = new Date(fromDate.value);
+
+    var todateNew = new Date(toDate.value);
+
+    var miliSecond = fromdateNew.getTime() - todateNew.getTime();
+
+    var years = Math.round(Math.abs(miliSecond / (1000 * 3600 * 24 * 365.25)));
+
+    var milliSeconds = todateNew.getTime() - fromdateNew.getTime();
+
+    var years = milliSeconds / (1000 * 3600 * 24 * 365.25);
+
+    if (Math.abs(years) > 2) {
+        alert("Time difference is not greater than 2 years.");
     }
 
     var from = new Date(fromDate);
@@ -43,11 +59,13 @@ function generateTable() {
 
     tableHTML += '<tr><td colspan="' + month.length + 2 + '">Income</td></tr>'
 
+    monthNumber = months.length + 1;
+
     //add all categories value and also add delete button.
     categories.filter(c => c.type === 'income').forEach(function (category) {
         tableHTML += '<tr><td>' + category.name + '</td>';
         months.forEach(function (month) {
-            tableHTML += '<td><input type="number" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0"></td>';
+            tableHTML += '<td><input type="number" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
         });
         tableHTML += '<td><button type="button"  onclick="DeleteCategory(\'' + category.name + '\')" id="DeleteCategoryButton" class="btn btn-outline-danger">Delete</button></td>';
         tableHTML += '</tr>';
@@ -60,7 +78,7 @@ function generateTable() {
     categories.filter(c => c.type === 'expense').forEach(function (category) {
         tableHTML += '<tr><td>' + category.name + '</td>';
         months.forEach(function (month) {
-            tableHTML += '<td><input type="number" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0"></td>';
+            tableHTML += '<td><input type="number" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
         });
         tableHTML += '<td><button type="button" onclick="DeleteCategory(\'' + category.name + '\')" id="DeleteCategoryButton" class="btn btn-outline-danger">Delete</button></td>';
         tableHTML += '</tr>';
@@ -122,12 +140,18 @@ function generateTable() {
     $('input[type = number]').keyup(function () {
         category = $(this).data('name');
         value = $(this).val();
-
-        console.log('Category:', category);
-        console.log('Value:', value);
+        console.log(category);
+        console.log(value);
     });
 
-    // when we clicked on apply on button
+    //$('input[type = number]').keypress(function () {
+    //    category = $(this).data('name');
+    //    value = $(this).val();
+    //    console.log(category);
+    //    console.log(value);
+    //});
+
+    // when we clicked on apply on button than apply function.
     $(".custom-menu li").click(function () {
         var action = $(this).attr("data-action");
 
@@ -141,7 +165,26 @@ function generateTable() {
         $(".custom-menu").hide(100);
     });
 
+
+    //var myConfig = {
+    //    type: 'line',
+    //    series: [
+    //        { values: [20, 40, 25, 50, 15, 45, 33, 34] },
+    //        { values: [5, 30, 21, 18, 59, 50, 28, 33] },
+    //        { values: [30, 5, 18, 21, 33, 41, 29, 15] }
+    //    ]
+    //};
+
+    //zingchart.render({
+    //    id: 'myChart',
+    //    data: myConfig,
+    //    height: '100%',
+    //    width: '100%'
+    //});
+
     calculateTotals();
+
+   
 }
 
 function addCategory(categoryNameText, categoryType) {
@@ -156,24 +199,20 @@ function addCategory(categoryNameText, categoryType) {
     }
 }
 
-
 //add a new category function
 function addNewCategoryRow(categoryType) {
     var table = $('#tableContainer table tbody');
     var placeholder = categoryType === 'income' ? 'Enter income category name' : 'Enter expense category name';
     var typeId = categoryType === 'income' ? 'newCategoryName' : 'newExpenseName';
-    var newRowHTML = '<tr><td colspan="' + monthsCount + 3 + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"></td>';
-    var monthsCount = $('#tableContainer thead th').length - 1;
-
-    console.log("main");
-
+    var newRowHTML = '<tr><td colspan = "' + monthNumber + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"></td>';
     var buttonId = categoryType === 'income' ? 'addCategoryButton' : 'addCategoryExpenseButton';
+
     newRowHTML += '<td><button type="button" class="btn btn-success" id="' + buttonId + '">Add Category</button></td></tr>';
+
     table.append(newRowHTML);
 
     return newRowHTML;
 }
-
 
 //delete any category by name.
 function DeleteCategory(categoryName) {
@@ -192,18 +231,20 @@ function DeleteCategory(categoryName) {
 //Calculate total income, total expense and profit/loss
 function calculateTotals() {
     var monthsCount = $('#tableContainer thead th').length - 1;
+
     var totalIncome = new Array(monthsCount).fill(0);
     var totalExpense = new Array(monthsCount).fill(0);
+
     var openingBalance = 0;
 
     $('.income').each(function () {
         var index = $(this).closest('td').index() - 1;
-        totalIncome[index] += parseFloat($(this).val()) || 0;
+        totalIncome[index] += parseFloat($(this).val());
     });
 
     $('.expense').each(function () {
         var index = $(this).closest('td').index() - 1;
-        totalExpense[index] += parseFloat($(this).val()) || 0;
+        totalExpense[index] += parseFloat($(this).val());
     });
 
     for (var i = 0; i < monthsCount; i++) {
@@ -215,8 +256,10 @@ function calculateTotals() {
         $('.profit-loss').eq(i).text(profitLoss.toFixed(2));
 
         var closingBalance = openingBalance + profitLoss;
+
         $('.opening-balance').eq(i).text(openingBalance.toFixed(2));
         $('.closing-balance').eq(i).text(closingBalance.toFixed(2));
+
         openingBalance = closingBalance;
     }
 
@@ -237,7 +280,6 @@ $(document).on('input', 'input[type="number"]', function () {
 //Export table function.
 function ExportTable() {
     var tab_text = "<table border='1px'><tr bgcolor='#87AFC6'>";
-    var j = 0;
     var tab = document.getElementById('mainTable');
 
     if (!tab || !tab.rows) {
@@ -245,17 +287,37 @@ function ExportTable() {
         return;
     }
 
-    for (j = 0; j < tab.rows.length; j++) {
-        tab_text = tab_text + tab.rows[j].innerHTML + "</tr>";
+    for (var j = 0; j < tab.rows.length; j++) {
+        var row = tab.rows[j];
+        tab_text += "<tr>";
+
+        for (var k = 0; k < row.cells.length; k++) {
+            var cell = row.cells[k];
+            var cellHtml = cell.innerHTML;
+
+            var inputs = cell.getElementsByTagName('input');
+
+            for (var i = 0; i < inputs.length; i++) {
+                var input = inputs[i];
+                if (input.type === 'number' || input.type === 'text') {
+                    cellHtml = input.value;
+                }
+            }
+
+            tab_text += "<td>" + cellHtml + "</td>";
+        }
+        tab_text += "</tr>";
     }
 
-    tab_text = tab_text + "</table>";
+    tab_text += "</table>";
+
     tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
     tab_text = tab_text.replace(/<img[^>]*>/gi, "");
     tab_text = tab_text.replace(/<input[^>]*>|<\/input>/gi, "");
 
     var ua = window.navigator.userAgent;
-    var msie = ua.indexOf("MSIE ");
+
+    var msie = ua.indexOf("MSIE");
 
     // If Internet Explorer or Edge
     if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./) || !!navigator.userAgent.match(/Edge\/\d+/)) {
@@ -283,7 +345,8 @@ function ExportTable() {
     return true;
 }
 
-//set context menu for only input type="number"
+
+//set context menu(Right click apply to all menu) for only input type="number"
 $(document).on("contextmenu", "#inptype[type=number]", function (event) {
     event.preventDefault();
 
@@ -300,3 +363,36 @@ $(document).on("mousedown", function (e) {
         $(".custom-menu").hide(100);
     }
 });
+
+function validateInput(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+
+    if (parseInt(input.value) < 0) {
+        input.value = 0;
+    }
+
+    if (input.value.length > input.maxLength) {
+        input.value = input.value.slice(0, input.maxLength);
+    }
+}
+
+//function MyLineChart() {
+//    const ctx = document.getElementById('myChart');
+//    const mixedChart = new Chart(ctx, {
+//        type: 'bar',
+//        data: {
+//            datasets: [{
+//                label: 'Bar Dataset',
+//                data: [10, 20, 30, 40],
+//                order: 2
+//            }, {
+//                label: 'Line Dataset',
+//                data: [10, 10, 10, 10],
+//                type: 'line',
+//                order: 1
+//            }],
+//            labels: ['January', 'February', 'March', 'April']
+//        },
+//        options: options
+//    });
+//}
