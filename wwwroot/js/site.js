@@ -12,12 +12,12 @@ function generateTable() {
     var toDate = $('#toDate').val();
 
     if (!fromDate || !toDate) {
-        alert('Please select both From Date and To Date.');
+        toastr.error('Please select both From Date and To Date.')
         return;
     }
 
     if (toDate <= fromDate) {
-        alert('To Date must be greater than From Date.');
+        toastr.error('To Date must be greater than From Date.')
         return;
     }
 
@@ -41,7 +41,7 @@ function generateTable() {
 
     tableHTML += '</tr></thead><tbody>';
 
-    tableHTML += '<tr><td colspan="' + month.length + 2 + '">Income</td></tr>'
+    tableHTML += '<tr><td colspan="' + months.length + 2 + '">Income</td></tr>'
 
     monthNumber = months.length + 1;
 
@@ -49,7 +49,7 @@ function generateTable() {
 
     tableHTML += addNewCategoryRow('income');
 
-    tableHTML += '<tr><td colspan="' + month.length + 2 + '">Expense</td></tr>'
+    tableHTML += '<tr><td colspan="' + months.length + 2 + '">Expense</td></tr>'
 
     AddFilterCategory('expense')
 
@@ -83,15 +83,12 @@ function generateTable() {
         }
     });
 
-
     var category = undefined;
     var value = undefined;
 
-    $(document).on('focus', 'input[type=number]', function () {         // keyup click focus
+    $(document).on('mouseover', 'input[type=number]', function () {         // keyup click focus mouseover
         category = $(this).data('name');
         value = $(this).val();
-        console.log('Category:', category);
-        console.log('Value:', value);
     });
 
     $(".custom-menu li").click(function () {
@@ -118,7 +115,7 @@ function addCategory(categoryNameText, categoryType) {
         categories.push({ name: categoryName, type: categoryType });
         appendCategoryRow(categoryName, categoryType);
     } else {
-        alert("Please enter a valid category name or Category already exists.");
+        toastr.error('Entered Category is already exist')
     }
 }
 
@@ -126,7 +123,7 @@ function AddFilterCategory(categoryType) {
     categories.filter(c => c.type === categoryType).forEach(function (category) {
         tableHTML += '<tr class="tr"><td>' + category.name + '</td>';
         months.forEach(function (month) {
-            tableHTML += '<td><input type="number" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
+            tableHTML += '<td><input type="number" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
         });
         tableHTML += '<td><button type="button"  id="DeleteCategoryButton" class="btn btn-outline-danger delete-category-button" data-category="' + category.name + '">Delete</button></td>';
         tableHTML += '</tr>';
@@ -151,7 +148,7 @@ function appendCategoryRow(categoryName, categoryType) {
 
     var newRowHTML = '<tr><td>' + categoryName + '</td>';
     months.forEach(function (month) {
-        newRowHTML += '<td><input id="inptype" type="number" min="0" class="td form-control ' + categoryType + '" data-category="' + categoryType + '" data-name="' + categoryName + '" data-month="' + new Date(month).getMonth() + '" data-year="' + new Date(month).getFullYear() + '" value="0" maxlength="8" oninput="validateInput(this)"></td>';
+        newRowHTML += '<td><input type="number" id="inptype" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;"  min="0" class="td form-control ' + categoryType + '" data-category="' + categoryType + '" data-name="' + categoryName + '" data-month="' + new Date(month).getMonth() + '" data-year="' + new Date(month).getFullYear() + '" value="0" maxlength="8" oninput="validateInput(this)"></td>';
     });
     newRowHTML += '<td><button type="button" class="btn btn-outline-danger delete-category-button" data-category="' + categoryName + '">Delete</button></td>';
     newRowHTML += '</tr>';
@@ -177,6 +174,10 @@ function appendCategoryRow(categoryName, categoryType) {
 
     $('#newCategoryName').val('');
     $('#newExpenseName').val('');
+
+    var toastMessage = `${categoryName} is added in ${categoryType} category successfully!`;
+
+    categoryType === 'income' ? toastr.success(toastMessage) : toastr.warning(toastMessage);
 }
 
 //onclick delete method
@@ -188,10 +189,8 @@ function addNewCategoryRow(categoryType) {
     var placeholder = categoryType === 'income' ? 'Add new income category name' : 'Add new expense category name';
     var typeId = categoryType === 'income' ? 'newCategoryName' : 'newExpenseName';
     var newRowHTML = '<tr><td colspan = "' + monthNumber + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"></td>';
-    var buttonId = categoryType === 'income' ? 'addCategoryButton' : 'addCategoryExpenseButton';
-
+    //var buttonId = categoryType === 'income' ? 'addCategoryButton' : 'addCategoryExpenseButton';
     //newRowHTML += '<td><button type="button" class="btn btn-success d-none" id="' + buttonId + '">Add Category</button></td></tr>';
-
     table.append(newRowHTML);
 
     return newRowHTML;
@@ -205,9 +204,10 @@ function delCategory() {
     });
     $(this).closest('tr').remove();
     calculateTotals();
+    toastr.info(`${CategoryName} is deleted successfully!`)
 }
 
-//Calculate total income, total expense and profit/loss
+//Calculate total income, total expense, profit/loss, opening and closing balance.
 function calculateTotals() {
     var monthsCount = $('#tableContainer thead th').length - 1;
 
@@ -256,15 +256,18 @@ $(document).on('input', 'input[type="number"]', function () {
     calculateTotals();
 });
 
-//Export table function.
 function ExportTable() {
-    var tab_text = "<table border='1px'><tr bgcolor='#87AFC6'>";
+    var tab_text = "<table><tr>";
     var tab = document.getElementById('mainTable');
 
     if (!tab || !tab.rows) {
-        window.alert('Table not found or has no rows.');
+        toastr.error('Table not found or has no rows.');
         return;
     }
+
+    tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
+    tab_text = tab_text.replace(/<img[^>]*>/gi, "");
+    tab_text = tab_text.replace(/<button[^>]*>|<\/button>/gi, "");
 
     for (var j = 0; j < tab.rows.length; j++) {
         var row = tab.rows[j];
@@ -283,15 +286,14 @@ function ExportTable() {
                 }
             }
 
+            cellHtml = cellHtml.replace(/Delete/gi, '');
+
             tab_text += "<td>" + cellHtml + "</td>";
         }
         tab_text += "</tr>";
     }
 
     tab_text += "</table>";
-    tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
-    //tab_text = tab_text.replace(/<img[^>]*>/gi, "");
-    tab_text = tab_text.replace(/<button[^>]*>|<\/button>/gi, ""); // removes button elements
 
     var ua = window.navigator.userAgent;
 
@@ -308,8 +310,8 @@ function ExportTable() {
         doc.close();
         doc.execCommand("SaveAs", true, "Budget.xls");
         document.body.removeChild(txtArea1);
-    }
-    else {
+        toastr.success('File generated successfully!');
+    } else {
         var blob = new Blob([tab_text], { type: "application/vnd.ms-excel" });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
@@ -319,11 +321,11 @@ function ExportTable() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        toastr.success('File generated successfully!');
     }
-
+    //toastr.success('File generated successfully!');
     return true;
 }
-
 
 $(document).on("contextmenu", "#inptype[type=number]", function (event) {
     event.preventDefault();
