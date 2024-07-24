@@ -171,13 +171,11 @@ function appendCategoryRow(categoryName, categoryType) {
 
     var firstInput = newRow.find('input[type=number]').first();
     firstInput.focus();
-
+ 
     $('#newCategoryName').val('');
     $('#newExpenseName').val('');
 
-    var toastMessage = `${categoryName} is added in ${categoryType} category successfully!`;
-
-    categoryType === 'income' ? toastr.success(toastMessage) : toastr.warning(toastMessage);
+    toastr.success(`${categoryName} is added in ${categoryType} category successfully!`);
 }
 
 //onclick delete method
@@ -204,7 +202,7 @@ function delCategory() {
     });
     $(this).closest('tr').remove();
     calculateTotals();
-    toastr.info(`${CategoryName} is deleted successfully!`)
+    toastr.error(`${CategoryName} is deleted successfully!`)
 }
 
 //Calculate total income, total expense, profit/loss, opening and closing balance.
