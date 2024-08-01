@@ -3,10 +3,22 @@ var categories = [
     //{ name: 'income', type: 'income' },
     //{ name: 'fees', type: 'expense' },
 ];
+
+$(".generateTable").click(toggleTable);
+
 var monthNumber = undefined;
 var months = undefined;
 var tableHTML = undefined;
 //generate table after selecting from date and to date.
+
+function toggleTable() {
+    if ($('#generateBtn').hasClass('generateTable')) {
+        generateTable();
+    } else {
+        resetTable();
+    }
+}   
+
 function generateTable() {
     var fromDate = $('#fromDate').val();
     var toDate = $('#toDate').val();
@@ -21,6 +33,12 @@ function generateTable() {
         return;
     }
 
+    $('#fromDate').prop('disabled', true);
+
+    $('#toDate').prop('disabled', true);
+
+    $('#generateBtn').removeClass('generateTable').addClass('resetTable').html('Reset');
+
     var from = new Date(fromDate);
     var to = new Date(toDate);
     months = [];
@@ -31,7 +49,7 @@ function generateTable() {
         month.setMonth(month.getMonth() + 1);
     }
 
-    tableHTML = '<table id="mainTable" class="table table-hover mt-3"><thead><tr><th>Category</th>';
+    tableHTML = '<table id="mainTable" class="table table-bordered mt-3"><thead><tr><th>Category</th>';
 
     //set selected month name in column
     months.forEach(function (month) {
@@ -70,10 +88,10 @@ function generateTable() {
     tableHTML += '</tr>';
     tableHTML += '</tfoot></table>';
 
-    $('#tableContainer').html(tableHTML);
+    $('#tableContainer').html('<div id="tableWrapper" style="height: 600px; overflow-y: auto;">' + tableHTML + '</div>');
 
     $('#newCategoryName, #newExpenseName').on('keydown', function (o) {
-        if (o.keyCode === 9) {                                                  //for "tab" key code = 9
+        if (o.keyCode === 9) {                                                  
             var categoryName = $(this).val().trim();
             if (categoryName !== "") {
                 o.preventDefault();
@@ -86,7 +104,7 @@ function generateTable() {
     var category = undefined;
     var value = undefined;
 
-    $(document).on('mouseover', 'input[type=number]', function () {         // keyup click focus mouseover
+    $(document).on('mouseover', 'input[type=number]', function () {         
         category = $(this).data('name');
         value = $(this).val();
     });
@@ -125,7 +143,8 @@ function AddFilterCategory(categoryType) {
         months.forEach(function (month) {
             tableHTML += '<td><input type="number" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
         });
-        tableHTML += '<td><button type="button"  id="DeleteCategoryButton" class="btn btn-outline-danger delete-category-button" data-category="' + category.name + '">Delete</button></td>';
+        tableHTML += '<td><button type="button" id="DeleteCategoryButton" class="btn btn-danger btn-sm delete-category-button" data-category="' + category.name + '">Delete</button></td>';
+
         tableHTML += '</tr>';
     });
 }
@@ -143,7 +162,6 @@ function appendCategoryRow(categoryName, categoryType) {
         return $(this).text();
     }).get();
 
-    //find array length and add in row index
     var arrLength = categories.filter(c => c.type === categoryType).length;
 
     var newRowHTML = '<tr><td>' + categoryName + '</td>';
@@ -153,7 +171,6 @@ function appendCategoryRow(categoryName, categoryType) {
     newRowHTML += '<td><button type="button" class="btn btn-outline-danger delete-category-button" data-category="' + categoryName + '">Delete</button></td>';
     newRowHTML += '</tr>';
 
-    //find static category line 
     var typeRowIndex = $('#mainTable tbody tr').filter(function () {
         return $(this).find('td').length === 1 && $(this).find('td').text().toLowerCase().includes(categoryType);
     }).index();
@@ -164,24 +181,26 @@ function appendCategoryRow(categoryName, categoryType) {
         $("table tbody").append(newRowHTML);
     }
 
-    // Add click event to the first td of the new row
     var newRow = $('#mainTable tbody tr').filter(function () {
         return $(this).find('td').first().text().trim() === categoryName;
     });
 
     var firstInput = newRow.find('input[type=number]').first();
     firstInput.focus();
- 
+    var inputElement = firstInput[0];
+    var length = inputElement.value.length;
+    inputElement.type = 'text';
+    inputElement.setSelectionRange(length, length);
+    inputElement.type = 'number';
+
     $('#newCategoryName').val('');
     $('#newExpenseName').val('');
 
     toastr.success(`${categoryName} is added in ${categoryType} category successfully!`);
 }
 
-//onclick delete method
 $(document).on('click', '.delete-category-button', delCategory);
 
-//add a new category function
 function addNewCategoryRow(categoryType) {
     var table = $('#tableContainer table tbody');
     var placeholder = categoryType === 'income' ? 'Add new income category name' : 'Add new expense category name';
@@ -194,18 +213,20 @@ function addNewCategoryRow(categoryType) {
     return newRowHTML;
 }
 
-//delete any category by name.
 function delCategory() {
     var CategoryName = $(this).data('category');
-    categories = categories.filter(function (obj) {
-        return obj.name !== CategoryName;
-    });
-    $(this).closest('tr').remove();
-    calculateTotals();
-    toastr.error(`${CategoryName} is deleted successfully!`)
+
+    var deleteConfirmation = confirm(`Are you sure, you want to delete the category "${CategoryName}" ?`);
+    if (deleteConfirmation) {
+        categories = categories.filter(function (obj) {
+            return obj.name !== CategoryName;
+        });
+        $(this).closest('tr').remove();
+        calculateTotals();
+        toastr.error(`${CategoryName} is deleted successfully!`)
+    }
 }
 
-//Calculate total income, total expense, profit/loss, opening and closing balance.
 function calculateTotals() {
     var monthsCount = $('#tableContainer thead th').length - 1;
 
@@ -215,7 +236,7 @@ function calculateTotals() {
     var openingBalance = 0;
 
     $('.income').each(function () {
-        var index = $(this).closest('td').index() - 1;
+        var index = $(this).closest('td').index() - 1;  
         totalIncome[index] += parseFloat($(this).val());
     });
 
@@ -250,7 +271,7 @@ function calculateTotals() {
     $('.grand-profit-loss').text(grandProfitLoss.toFixed(2));
 }
 
-$(document).on('input', 'input[type="number"]', function () {
+$(document).on('focusout', 'input[type="number"]', function () {
     calculateTotals();
 });
 
@@ -294,7 +315,7 @@ function ExportTable() {
     tab_text += "</table>";
 
     var ua = window.navigator.userAgent;
-
+    var excelSheetName = ExcelSheetName();
     var msie = ua.indexOf("MSIE");
 
     // If Internet Explorer or Edge
@@ -306,7 +327,7 @@ function ExportTable() {
         doc.open("txt/html", "replace");
         doc.write(tab_text);
         doc.close();
-        doc.execCommand("SaveAs", true, "Budget.xls");
+        doc.execCommand("SaveAs", true, excelSheetName);
         document.body.removeChild(txtArea1);
         toastr.success('File generated successfully!');
     } else {
@@ -314,7 +335,7 @@ function ExportTable() {
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = 'Budget.xls';
+        a.download = excelSheetName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -375,3 +396,114 @@ function validateInput(input) {
         input.value = input.value.slice(0, input.maxLength);
     }
 }
+
+function CollectData() {
+    var data = [];
+
+    var tab = $('#mainTable');
+
+    //if (!tab || !tab.rows) {
+    //    toastr.error('Table not found or has no rows.');
+    //    return;
+    //}
+    $('#mainTable tbody tr').each(function () {
+        var category = $(this).find('td:first').text().trim();
+
+        if (category && category.toLowerCase() !== 'income' && category.toLowerCase() !== 'expense') {
+            $(this).find('input[type="number"]').each(function () {
+                var monthIndex = $(this).data('month');
+                var year = $(this).data('year');
+                var amount = parseFloat($(this).val()) || 0;
+
+                var monthName = new Date(year, monthIndex).toLocaleString('default', { month: 'long' });
+
+                data.push({
+                    Category: category,
+                    Month: monthName,
+                    Year: year,
+                    Amount: amount
+                });
+            });
+        }
+    });
+
+    return data;
+}
+
+function formatDate(date) {
+    var d = new Date(date);
+    var day = String(d.getDate()).padStart(2, '0');
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var year = d.getFullYear();
+    return `${day}${month}${year}`;
+}
+
+function CurrentDateTime() {
+    var now = new Date();
+    var day = String(now.getDate()).padStart(2, '0');
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var year = now.getFullYear();
+    var hours = String(now.getHours()).padStart(2, '0');
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    var minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${day}${month}${year}_T${hours}${minutes}${ampm}`;
+}
+
+function ExcelSheetName() {
+    var fromDate = $("#fromDate").val();
+    var toDate = $("#toDate").val();
+    var formattedFromDate = formatDate(fromDate);
+    var formattedToDate = formatDate(toDate);
+
+    var currentDateTime = CurrentDateTime();
+
+    var sheetName = `Budget_${formattedFromDate}_${formattedToDate}_${currentDateTime}`;
+
+    return sheetName;
+}
+
+function resetTable() {
+    var confirmationOfReset = confirm("Are you sure you want to reset this page? Once confirmed, you will not be able to undo this action.")
+    if (confirmationOfReset) {
+        var fromDatePicker = $("#fromDate");
+        var toDatePicker = $("#toDate");
+
+        fromDatePicker.val('');
+        toDatePicker.val('');
+        fromDatePicker.prop('disabled', false);
+        toDatePicker.prop('disabled', false);
+
+        months = [];
+        categories = [];
+
+        window.location.reload();
+    }
+}
+
+function sendData() {
+    var data = CollectData();
+
+    if (data.length === 0) {
+        toastr.error("Please insert value!");
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: '/Home/PostData', 
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(data),
+        success: function (response) {
+            toastr.success('Data sent successfully!');
+            console.log(response);
+        },
+        error: function (xhr, status, error) {
+            toastr.error('Failed to send data.');
+            console.error(error);
+        }
+    });
+}
+
+$(document).on('click', '#sendData', sendData);

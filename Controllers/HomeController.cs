@@ -23,6 +23,12 @@ namespace Budget_Calculator.Controllers
             return View();
         }
 
+        [HttpPost]
+        public IActionResult PostData([FromBody] List<TableModel> tableModel)
+        {
+            return Ok();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
