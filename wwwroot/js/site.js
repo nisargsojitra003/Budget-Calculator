@@ -1,23 +1,26 @@
-﻿//Predefined Category for income and expense.
-var categories = [
-    //{ name: 'income', type: 'income' },
-    //{ name: 'fees', type: 'expense' },
-];
+﻿
+var categories = [];
 
-$(".generateTable").click(toggleTable);
+var activities = [];
+
+$("#generateBtn").click(toggleTable);
+$("#showActivity").click(ShowActivity);
+$(document).on('click', '#closeActivityButton', CloseActivity);
+
 
 var monthNumber = undefined;
 var months = undefined;
 var tableHTML = undefined;
+
 //generate table after selecting from date and to date.
 
 function toggleTable() {
-    if ($('#generateBtn').hasClass('generateTable')) {
-        generateTable();
-    } else {
-        resetTable();
-    }
-}   
+    $('#generateBtn').hasClass('generateTable') ? generateTable() : resetTable();
+}
+
+function toggleActivityList() {
+    $('#showActivity').hasClass('fullActivityList') ? ShowActivity() : CloseActivity();
+}
 
 function generateTable() {
     var fromDate = $('#fromDate').val();
@@ -39,6 +42,11 @@ function generateTable() {
 
     $('#generateBtn').removeClass('generateTable').addClass('resetTable').html('Reset');
 
+    $('#showActivity').css('display', 'block');
+
+    $('#exportBtn').css('display', 'block');
+
+
     var from = new Date(fromDate);
     var to = new Date(toDate);
     months = [];
@@ -51,7 +59,6 @@ function generateTable() {
 
     tableHTML = '<table id="mainTable" class="table table-bordered mt-3"><thead><tr><th>Category</th>';
 
-    //set selected month name in column
     months.forEach(function (month) {
         var monthName = month.toLocaleString('default', { month: 'short', year: 'numeric' });
         tableHTML += '<th>' + monthName + '</th>';
@@ -88,10 +95,16 @@ function generateTable() {
     tableHTML += '</tr>';
     tableHTML += '</tfoot></table>';
 
-    $('#tableContainer').html('<div id="tableWrapper" style="height: 600px; overflow-y: auto;">' + tableHTML + '</div>');
+    $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar" style="height: 300px; overflow-y: auto;">' + tableHTML + '</div>');
 
+    var timestamp = CurrentDateTime();
+    var converttedFromDate = convertDateFormat(fromDate);
+    var converttedToDate = convertDateFormat(toDate);
+    var firstActivity = `${timestamp} | Budget has been generated : From Date = ${converttedFromDate} , To Date = ${converttedToDate}.`;
+
+    activities.push(firstActivity);
     $('#newCategoryName, #newExpenseName').on('keydown', function (o) {
-        if (o.keyCode === 9) {                                                  
+        if (o.keyCode === 9) {
             var categoryName = $(this).val().trim();
             if (categoryName !== "") {
                 o.preventDefault();
@@ -101,12 +114,23 @@ function generateTable() {
         }
     });
 
+    var timeStamp = undefined;
     var category = undefined;
     var value = undefined;
+    var categoryType = undefined;
+    var monthName = undefined;
+    var year = undefined;
+    var applyAllMsg = undefined;
 
-    $(document).on('mouseover', 'input[type=number]', function () {         
+    $(document).on('mouseover', 'input[type=number]', function () {
         category = $(this).data('name');
         value = $(this).val();
+        timeStamp = CurrentDateTime();
+        categoryType = $(this).data('category');
+        monthName = getMonthName($(this).data('month'));
+        year = $(this).data('year');
+        applyAllMsg = `${timeStamp} | ${value} Rs. as ${categoryType} has been saved for ${monthName} ${year} as ${category} and applied to all.`;
+        console.log(applyAllMsg);
     });
 
     $(".custom-menu li").click(function () {
@@ -116,8 +140,19 @@ function generateTable() {
             $('input[data-name="' + category + '"]').val(value).trigger('input');
         }
 
+        if (value !== "0") {
+            activities.push(applyAllMsg);
+        }
+
+        calculateTotals();
+
         category = undefined;
         value = undefined;
+        timeStamp = undefined;
+        categoryType = undefined;
+        monthName = undefined;
+        year = undefined;
+        applyAllMsg = undefined;
 
         $(".custom-menu").hide(100);
     });
@@ -126,11 +161,15 @@ function generateTable() {
 }
 
 function addCategory(categoryNameText, categoryType) {
+
     var categoryName = $(categoryNameText).val().trim();
     var ifCategoryIsAlreadyExist = categories.some(({ name, type }) => name.toLocaleLowerCase() === categoryName.toLocaleLowerCase() && type === categoryType);
+    var timestamp = CurrentDateTime();
+    var addActivity = `${timestamp} | ${categoryType} category has been added: ${categoryName}.`;
 
     if (categoryName !== "" && !ifCategoryIsAlreadyExist) {
         categories.push({ name: categoryName, type: categoryType });
+        activities.push(addActivity);
         appendCategoryRow(categoryName, categoryType);
     } else {
         toastr.error('Entered Category is already exist')
@@ -143,7 +182,7 @@ function AddFilterCategory(categoryType) {
         months.forEach(function (month) {
             tableHTML += '<td><input type="number" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;" min="0" id="inptype" class="td form-control ' + category.type + '" data-category="' + category.type + '" data-name="' + category.name + '" data-month="' + month.getMonth() + '" data-year="' + month.getFullYear() + '" value="0" maxlength = "8" oninput="validateInput(this)"></td>';
         });
-        tableHTML += '<td><button type="button" id="DeleteCategoryButton" class="btn btn-danger btn-sm delete-category-button" data-category="' + category.name + '">Delete</button></td>';
+        tableHTML += '<td><button type="button" id="DeleteCategoryButton" class="btn btn-danger btn-sm delete-category-button" data-category="' + category.name + '" data-type="' + categoryType + '">Delete</button></td>';
 
         tableHTML += '</tr>';
     });
@@ -157,6 +196,11 @@ function CommonTrTd(name, title) {
     tableHTML += '</tr>';
 }
 
+function convertDateFormat(date) {
+    var parts = date.split("-");
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
 function appendCategoryRow(categoryName, categoryType) {
     var months = $('#mainTable thead th').not(':first').map(function () {
         return $(this).text();
@@ -168,7 +212,7 @@ function appendCategoryRow(categoryName, categoryType) {
     months.forEach(function (month) {
         newRowHTML += '<td><input type="number" id="inptype" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;"  min="0" class="td form-control ' + categoryType + '" data-category="' + categoryType + '" data-name="' + categoryName + '" data-month="' + new Date(month).getMonth() + '" data-year="' + new Date(month).getFullYear() + '" value="0" maxlength="8" oninput="validateInput(this)"></td>';
     });
-    newRowHTML += '<td><button type="button" class="btn btn-outline-danger delete-category-button" data-category="' + categoryName + '">Delete</button></td>';
+    newRowHTML += '<td><button type="button" class="btn btn-outline-danger delete-category-button" data-category="' + categoryName + '" data-type="' + categoryType + '">Delete</button></td>';
     newRowHTML += '</tr>';
 
     var typeRowIndex = $('#mainTable tbody tr').filter(function () {
@@ -215,12 +259,15 @@ function addNewCategoryRow(categoryType) {
 
 function delCategory() {
     var CategoryName = $(this).data('category');
+    var categoryType = $(this).data('type');
+    var timeStamp = CurrentDateTime();
 
     var deleteConfirmation = confirm(`Are you sure, you want to delete the category "${CategoryName}" ?`);
     if (deleteConfirmation) {
         categories = categories.filter(function (obj) {
             return obj.name !== CategoryName;
         });
+        activities.push(`${timeStamp} | ${categoryType} category has been deleted: ${CategoryName}`);
         $(this).closest('tr').remove();
         calculateTotals();
         toastr.error(`${CategoryName} is deleted successfully!`)
@@ -236,7 +283,7 @@ function calculateTotals() {
     var openingBalance = 0;
 
     $('.income').each(function () {
-        var index = $(this).closest('td').index() - 1;  
+        var index = $(this).closest('td').index() - 1;
         totalIncome[index] += parseFloat($(this).val());
     });
 
@@ -272,6 +319,20 @@ function calculateTotals() {
 }
 
 $(document).on('focusout', 'input[type="number"]', function () {
+    var timestamp = CurrentDateTime();
+    var inputValue = $(this).val();
+    var categoryType = $(this).data('category');
+    var monthName = getMonthName($(this).data('month'));
+    var year = $(this).data('year');
+    var categoryName = $(this).data('name');
+
+    var addValueActivity = `${timestamp} | ${inputValue} Rs. as ${categoryType} has been saved for ${monthName} ${year} as ${categoryName}.`;
+
+    if (inputValue !== "0") {
+        activities.push(addValueActivity);
+
+    }
+
     calculateTotals();
 });
 
@@ -355,6 +416,16 @@ $(document).on("contextmenu", "#inptype[type=number]", function (event) {
             left: event.pageX + "px"
         });
 });
+
+$(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+
+function getMonthName(monthNumber) {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return monthNames[monthNumber];
+}
 
 //through click on screen we can hide option.
 $(document).on("mousedown", function (e) {
@@ -447,11 +518,13 @@ function CurrentDateTime() {
     var ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12;
+    hours = String(hours).padStart(2, '0');
     var minutes = String(now.getMinutes()).padStart(2, '0');
     return `${day}${month}${year}_T${hours}${minutes}${ampm}`;
 }
 
 function ExcelSheetName() {
+
     var fromDate = $("#fromDate").val();
     var toDate = $("#toDate").val();
     var formattedFromDate = formatDate(fromDate);
@@ -465,45 +538,70 @@ function ExcelSheetName() {
 }
 
 function resetTable() {
+
     var confirmationOfReset = confirm("Are you sure you want to reset this page? Once confirmed, you will not be able to undo this action.")
+
     if (confirmationOfReset) {
         var fromDatePicker = $("#fromDate");
         var toDatePicker = $("#toDate");
+        $('#showActivity').show();
 
         fromDatePicker.val('');
         toDatePicker.val('');
         fromDatePicker.prop('disabled', false);
         toDatePicker.prop('disabled', false);
+        $('#showActivity').css('display', 'none');
+        $('#exportBtn').css('display', 'none');
 
         months = [];
         categories = [];
-
+        activities = [];
         window.location.reload();
     }
 }
 
-function sendData() {
-    var data = CollectData();
+function ShowActivity() {
 
-    if (data.length === 0) {
-        toastr.error("Please insert value!");
-        return;
-    }
-
-    $.ajax({
-        type: 'POST',
-        url: '/Home/PostData', 
-        contentType: 'application/json; charset=utf-8',
-        data: JSON.stringify(data),
-        success: function (response) {
-            toastr.success('Data sent successfully!');
-            console.log(response);
-        },
-        error: function (xhr, status, error) {
-            toastr.error('Failed to send data.');
-            console.error(error);
-        }
+    activities.sort(function (a, b) {
+        if (a > b) return -1;
+        if (a < b) return 1;
+        return 0;
     });
+
+    var activityListHTML = `
+        <div style='height: 250px; width: 1300px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;' class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded'>
+            <div class='d-flex justify-content-between align-items-center mb-4'>
+                <h4 class='text-primary mb-0'>Activity List</h4>
+                <button data-toggle="tooltip" data-placement="top" title="Close" type='button' id='closeActivityButton' class='btn btn-danger btn-close'></button>
+            </div>
+    `;
+
+    $('#showActivity').hide();
+
+    activities.forEach(function (activity, index) {
+        activityListHTML += `
+            <div class='card mb-3 shadow-lg'>
+                <div class='card-body'>
+                    <p class='card-text'>${activity}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    $("#mainTable").find("input,button,textarea,select").attr("disabled", "disabled");
+
+    activityListHTML += "</div>";
+
+    $("#activityList").html(activityListHTML);
 }
 
-$(document).on('click', '#sendData', sendData);
+
+function CloseActivity() {
+    //$('#showActivity').removeClass('closeActivityList').addClass('fullActivityList').html('Activity');
+
+    $('#showActivity').show();
+
+    $("#mainTable").find("input,button,textarea,select").removeAttr("disabled");
+
+    $('#activityList').empty();
+}

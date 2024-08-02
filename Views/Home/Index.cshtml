@@ -5,26 +5,32 @@
 }
 <div class="container mt-3">
     <div class="row">
-        <div class="text-center text-info"><h3>Budget Calculator</h3></div>
+        <div class="col-12 text-center text-info mb-4">
+            <h3>Budget Calculator</h3>
+        </div>
         <div class="col-md-4 mb-3">
             <input type="date" class="form-control" id="fromDate" name="fromDate" placeholder="From Date" required>
-            <label for="fromDate" class="sr-only">From Date:</label>
         </div>
         <div class="col-md-4 mb-3">
             <input type="date" class="form-control" id="toDate" name="toDate" placeholder="To Date" required>
-            <label for="toDate" class="sr-only">To Date:</label>
         </div>
-        <div class="col-md-4 mt-0">
-            <button type="button" id="generateBtn" class="generateTable btn btn-primary">Generate</button>
-            <button id="exportBtn" onclick="ExportTable()" type="button" class="btn btn-success"><i class="fa-solid fa-file-export"></i></button>
+        <div class="col-md-4 mb-3 d-flex justify-content-center align-items-center">
+            <button type="button" id="generateBtn" class="btn btn-primary generateTable me-2">Generate</button>
+            <button data-toggle="tooltip" data-placement="top" title="Edit" style="display:none" id="exportBtn" onclick="ExportTable()" type="button" class="btn btn-success me-2">
+                <i class="fa-solid fa-file-export"></i>
+            </button>
+            <button id="showActivity" style="display:none" type="button" class="btn btn-info fullActivityList custom-scrollbar">
+                Activity
+            </button>
         </div>
     </div>
 </div>
 
+
 <ul class='custom-menu'>
     <li data-action="first">Apply to all</li>
 </ul>
+<div id="activityList" class="mt-5"></div>
 
-<div id="tableContainer">
-    <div id="myChart"></div>
+<div id="tableContainer" class="mt-5">
 </div>
