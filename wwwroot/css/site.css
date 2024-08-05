@@ -2,10 +2,6 @@ html {
   font-size: 14px;
 }
 
-
-
-
-
 @media (min-width: 768px) {
   html {
     font-size: 16px;
@@ -20,15 +16,34 @@ input[type='number'] {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
+/*table {
+    text-align: left;
+    position: relative;
+}
 
-/* Custom Scrollbar Styles */
+th {
+    background: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}*/
+
+#mainTable thead th {
+    /*position: -webkit-sticky;*/
+    position: sticky;
+    top: 0;
+    background-color: #fff; 
+    z-index: 10;
+}
+
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #c0c0c0 #f5f5f5;
 }
 
     .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 10px;
+        height: 10px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
@@ -43,6 +58,7 @@ input[type='number'] {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #a0a0a0;
         }
+
 
 
 html {

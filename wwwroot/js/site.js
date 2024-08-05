@@ -1,25 +1,19 @@
-﻿
+﻿//Budget Calculator 
 var categories = [];
 
 var activities = [];
 
-$("#generateBtn").click(toggleTable);
-$("#showActivity").click(ShowActivity);
+$(document).on('click', '#generateBtn', toggleTable);
+$(document).on('click', '#showActivity', ShowActivity);
 $(document).on('click', '#closeActivityButton', CloseActivity);
-
+$(document).on('click', '.delete-category-button', delCategory);
 
 var monthNumber = undefined;
 var months = undefined;
 var tableHTML = undefined;
 
-//generate table after selecting from date and to date.
-
 function toggleTable() {
     $('#generateBtn').hasClass('generateTable') ? generateTable() : resetTable();
-}
-
-function toggleActivityList() {
-    $('#showActivity').hasClass('fullActivityList') ? ShowActivity() : CloseActivity();
 }
 
 function generateTable() {
@@ -45,7 +39,6 @@ function generateTable() {
     $('#showActivity').css('display', 'block');
 
     $('#exportBtn').css('display', 'block');
-
 
     var from = new Date(fromDate);
     var to = new Date(toDate);
@@ -95,14 +88,9 @@ function generateTable() {
     tableHTML += '</tr>';
     tableHTML += '</tfoot></table>';
 
-    $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar" style="height: 300px; overflow-y: auto;">' + tableHTML + '</div>');
+    $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar table-container" style="height: 300px; overflow-y: auto; margin: 0 -150px;">' + tableHTML + '</div>');
 
-    var timestamp = CurrentDateTime();
-    var converttedFromDate = convertDateFormat(fromDate);
-    var converttedToDate = convertDateFormat(toDate);
-    var firstActivity = `${timestamp} | Budget has been generated : From Date = ${converttedFromDate} , To Date = ${converttedToDate}.`;
-
-    activities.push(firstActivity);
+    activities.push(`${CurrentDateTimeInFormat()} | Budget has been generated : From Date = ${convertDateFormat(fromDate)} , To Date = ${convertDateFormat(toDate)}.`);
     $('#newCategoryName, #newExpenseName').on('keydown', function (o) {
         if (o.keyCode === 9) {
             var categoryName = $(this).val().trim();
@@ -125,7 +113,7 @@ function generateTable() {
     $(document).on('mouseover', 'input[type=number]', function () {
         category = $(this).data('name');
         value = $(this).val();
-        timeStamp = CurrentDateTime();
+        timeStamp = CurrentDateTimeInFormat();
         categoryType = $(this).data('category');
         monthName = getMonthName($(this).data('month'));
         year = $(this).data('year');
@@ -164,8 +152,7 @@ function addCategory(categoryNameText, categoryType) {
 
     var categoryName = $(categoryNameText).val().trim();
     var ifCategoryIsAlreadyExist = categories.some(({ name, type }) => name.toLocaleLowerCase() === categoryName.toLocaleLowerCase() && type === categoryType);
-    var timestamp = CurrentDateTime();
-    var addActivity = `${timestamp} | ${categoryType} category has been added: ${categoryName}.`;
+    var addActivity = `${CurrentDateTimeInFormat() } | ${categoryType} category has been added: ${categoryName}.`;
 
     if (categoryName !== "" && !ifCategoryIsAlreadyExist) {
         categories.push({ name: categoryName, type: categoryType });
@@ -212,6 +199,7 @@ function appendCategoryRow(categoryName, categoryType) {
     months.forEach(function (month) {
         newRowHTML += '<td><input type="number" id="inptype" pattern="/^-?\d+\.?\d*$/" onKeyPress="if(this.value.length==8) return false;"  min="0" class="td form-control ' + categoryType + '" data-category="' + categoryType + '" data-name="' + categoryName + '" data-month="' + new Date(month).getMonth() + '" data-year="' + new Date(month).getFullYear() + '" value="0" maxlength="8" oninput="validateInput(this)"></td>';
     });
+
     newRowHTML += '<td><button type="button" class="btn btn-outline-danger delete-category-button" data-category="' + categoryName + '" data-type="' + categoryType + '">Delete</button></td>';
     newRowHTML += '</tr>';
 
@@ -243,15 +231,11 @@ function appendCategoryRow(categoryName, categoryType) {
     toastr.success(`${categoryName} is added in ${categoryType} category successfully!`);
 }
 
-$(document).on('click', '.delete-category-button', delCategory);
-
 function addNewCategoryRow(categoryType) {
     var table = $('#tableContainer table tbody');
     var placeholder = categoryType === 'income' ? 'Add new income category name' : 'Add new expense category name';
     var typeId = categoryType === 'income' ? 'newCategoryName' : 'newExpenseName';
-    var newRowHTML = '<tr><td colspan = "' + monthNumber + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"></td>';
-    //var buttonId = categoryType === 'income' ? 'addCategoryButton' : 'addCategoryExpenseButton';
-    //newRowHTML += '<td><button type="button" class="btn btn-success d-none" id="' + buttonId + '">Add Category</button></td></tr>';
+    var newRowHTML = '<tr><td colspan = "' + monthNumber + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"  onkeypress="return isNotNumber(event)"></td>';
     table.append(newRowHTML);
 
     return newRowHTML;
@@ -260,7 +244,7 @@ function addNewCategoryRow(categoryType) {
 function delCategory() {
     var CategoryName = $(this).data('category');
     var categoryType = $(this).data('type');
-    var timeStamp = CurrentDateTime();
+    var timeStamp = CurrentDateTimeInFormat();
 
     var deleteConfirmation = confirm(`Are you sure, you want to delete the category "${CategoryName}" ?`);
     if (deleteConfirmation) {
@@ -270,7 +254,7 @@ function delCategory() {
         activities.push(`${timeStamp} | ${categoryType} category has been deleted: ${CategoryName}`);
         $(this).closest('tr').remove();
         calculateTotals();
-        toastr.error(`${CategoryName} is deleted successfully!`)
+        toastr.error(`${CategoryName} category is deleted successfully!`)
     }
 }
 
@@ -319,7 +303,8 @@ function calculateTotals() {
 }
 
 $(document).on('focusout', 'input[type="number"]', function () {
-    var timestamp = CurrentDateTime();
+
+    var timestamp = CurrentDateTimeInFormat();
     var inputValue = $(this).val();
     var categoryType = $(this).data('category');
     var monthName = getMonthName($(this).data('month'));
@@ -330,7 +315,6 @@ $(document).on('focusout', 'input[type="number"]', function () {
 
     if (inputValue !== "0") {
         activities.push(addValueActivity);
-
     }
 
     calculateTotals();
@@ -403,7 +387,6 @@ function ExportTable() {
         URL.revokeObjectURL(url);
         toastr.success('File generated successfully!');
     }
-    //toastr.success('File generated successfully!');
     return true;
 }
 
@@ -421,20 +404,34 @@ $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 });
 
+//window.onbeforeunload = function () {
+//    return "Data will be lost if you leave the page, are you sure?";
+//};
+
 function getMonthName(monthNumber) {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return monthNames[monthNumber];
 }
 
-//through click on screen we can hide option.
+function isNotNumber(evt) {
+    var charCode = evt.which ? evt.which : evt.keyCode;
+    if (charCode == 8 || charCode == 46 || charCode == 9 || charCode == 27 || charCode == 13) {
+        return true;
+    }
+
+    if (charCode >= 48 && charCode <= 57) {
+        return false;
+    }
+    return true;
+}
+
 $(document).on("mousedown", function (e) {
     if (!$(e.target).closest(".custom-menu").length) {
         $(".custom-menu").hide(100);
     }
 });
 
-//validation for every input type number
 function validateInput(input) {
     input.value = input.value.replace(/[^0-9.]/g, '');
 
@@ -468,39 +465,6 @@ function validateInput(input) {
     }
 }
 
-function CollectData() {
-    var data = [];
-
-    var tab = $('#mainTable');
-
-    //if (!tab || !tab.rows) {
-    //    toastr.error('Table not found or has no rows.');
-    //    return;
-    //}
-    $('#mainTable tbody tr').each(function () {
-        var category = $(this).find('td:first').text().trim();
-
-        if (category && category.toLowerCase() !== 'income' && category.toLowerCase() !== 'expense') {
-            $(this).find('input[type="number"]').each(function () {
-                var monthIndex = $(this).data('month');
-                var year = $(this).data('year');
-                var amount = parseFloat($(this).val()) || 0;
-
-                var monthName = new Date(year, monthIndex).toLocaleString('default', { month: 'long' });
-
-                data.push({
-                    Category: category,
-                    Month: monthName,
-                    Year: year,
-                    Amount: amount
-                });
-            });
-        }
-    });
-
-    return data;
-}
-
 function formatDate(date) {
     var d = new Date(date);
     var day = String(d.getDate()).padStart(2, '0');
@@ -523,16 +487,24 @@ function CurrentDateTime() {
     return `${day}${month}${year}_T${hours}${minutes}${ampm}`;
 }
 
-function ExcelSheetName() {
+function CurrentDateTimeInFormat() {
+    var now = new Date();
+    var day = String(now.getDate()).padStart(2, '0');
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var year = now.getFullYear();
+    var hours = String(now.getHours()).padStart(2, '0');
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    hours = String(hours).padStart(2, '0');
+    var minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${day}-${month}-${year}_T${hours}:${minutes} ${ampm}`;
+}
 
+function ExcelSheetName() {
     var fromDate = $("#fromDate").val();
     var toDate = $("#toDate").val();
-    var formattedFromDate = formatDate(fromDate);
-    var formattedToDate = formatDate(toDate);
-
-    var currentDateTime = CurrentDateTime();
-
-    var sheetName = `Budget_${formattedFromDate}_${formattedToDate}_${currentDateTime}`;
+    var sheetName = `Budget_${formatDate(fromDate)}_${formatDate(toDate)}_${CurrentDateTime()}`;
 
     return sheetName;
 }
@@ -562,43 +534,38 @@ function resetTable() {
 
 function ShowActivity() {
 
-    activities.sort(function (a, b) {
-        if (a > b) return -1;
-        if (a < b) return 1;
-        return 0;
-    });
+    activities = activities.reverse();
 
     var activityListHTML = `
-        <div style='height: 250px; width: 1300px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;' class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded'>
+        <div style='height: 250px; margin: 0 -150px; width: 1600px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;' class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded'>
             <div class='d-flex justify-content-between align-items-center mb-4'>
-                <h4 class='text-primary mb-0'>Activity List</h4>
+                <h4 class='text-primary text-center mb-0'>Activity List</h4>
                 <button data-toggle="tooltip" data-placement="top" title="Close" type='button' id='closeActivityButton' class='btn btn-danger btn-close'></button>
             </div>
     `;
 
     $('#showActivity').hide();
 
-    activities.forEach(function (activity, index) {
+    activities.forEach(function (activity) {
         activityListHTML += `
-            <div class='card mb-3 shadow-lg'>
-                <div class='card-body'>
-                    <p class='card-text'>${activity}</p>
+            <div class='card mb-2 shadow-sm'>
+                <div class='card-body p-2'>
+                    <p class='card-text' style='font-size: 0.9rem;'>${activity}</p>
                 </div>
             </div>
         `;
     });
 
-    $("#mainTable").find("input,button,textarea,select").attr("disabled", "disabled");
-
+    $("#mainTable").find("input, button, textarea, select").attr("disabled", "disabled");
+        
     activityListHTML += "</div>";
 
     $("#activityList").html(activityListHTML);
+
+    activities = activities.reverse();
 }
 
-
 function CloseActivity() {
-    //$('#showActivity').removeClass('closeActivityList').addClass('fullActivityList').html('Activity');
-
     $('#showActivity').show();
 
     $("#mainTable").find("input,button,textarea,select").removeAttr("disabled");
