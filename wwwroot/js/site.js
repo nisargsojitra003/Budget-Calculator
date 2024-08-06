@@ -8,9 +8,21 @@ $(document).on('click', '#showActivity', ShowActivity);
 $(document).on('click', '#closeActivityButton', CloseActivity);
 $(document).on('click', '.delete-category-button', delCategory);
 
+var imageUrl = 'https://localhost:44342/images/background_image.jpg';
+
+$('body').css('background-image', 'url(' + imageUrl + ')');
 var monthNumber = undefined;
 var months = undefined;
 var tableHTML = undefined;
+
+$(document).on("click", "#tableContainer", ReadOnlyMode);
+
+function ReadOnlyMode() {
+    if ($('#activityList').hasClass('activityCheck')) {
+        toastr.error("Calculator is in read-only mode, Close the activity list to edit.");
+    }
+}
+
 
 function toggleTable() {
     $('#generateBtn').hasClass('generateTable') ? generateTable() : resetTable();
@@ -50,7 +62,7 @@ function generateTable() {
         month.setMonth(month.getMonth() + 1);
     }
 
-    tableHTML = '<table id="mainTable" class="table table-bordered mt-3"><thead><tr><th>Category</th>';
+    tableHTML = '<table style="background-image: url(' + imageUrl + ')" id="mainTable" class="table table-bordered mt-2 shadow p-3 bg-white rounded"><thead><tr><th>Category</th>';
 
     months.forEach(function (month) {
         var monthName = month.toLocaleString('default', { month: 'short', year: 'numeric' });
@@ -59,7 +71,7 @@ function generateTable() {
 
     tableHTML += '</tr></thead><tbody>';
 
-    tableHTML += '<tr><td colspan="' + months.length + 2 + '">Income</td></tr>'
+    tableHTML += '<tr><td class="staticRow" colspan="' + months.length + 2 + '">Income</td></tr>'
 
     monthNumber = months.length + 1;
 
@@ -67,7 +79,7 @@ function generateTable() {
 
     tableHTML += addNewCategoryRow('income');
 
-    tableHTML += '<tr><td colspan="' + months.length + 2 + '">Expense</td></tr>'
+    tableHTML += '<tr><td class="staticRow" colspan="' + months.length + 2 + '">Expense</td></tr>'
 
     AddFilterCategory('expense')
 
@@ -88,7 +100,8 @@ function generateTable() {
     tableHTML += '</tr>';
     tableHTML += '</tfoot></table>';
 
-    $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar table-container" style="height: 300px; overflow-y: auto; margin: 0 -150px;">' + tableHTML + '</div>');
+    $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar table-container" style="height: 670px; overflow-y: auto; margin: 0 -150px;">' + tableHTML + '</div>');
+
 
     activities.push(`${CurrentDateTimeInFormat()} | Budget has been generated : From Date = ${convertDateFormat(fromDate)} , To Date = ${convertDateFormat(toDate)}.`);
     $('#newCategoryName, #newExpenseName').on('keydown', function (o) {
@@ -152,7 +165,7 @@ function addCategory(categoryNameText, categoryType) {
 
     var categoryName = $(categoryNameText).val().trim();
     var ifCategoryIsAlreadyExist = categories.some(({ name, type }) => name.toLocaleLowerCase() === categoryName.toLocaleLowerCase() && type === categoryType);
-    var addActivity = `${CurrentDateTimeInFormat() } | ${categoryType} category has been added: ${categoryName}.`;
+    var addActivity = `${CurrentDateTimeInFormat()} | ${categoryType} category has been added: ${categoryName}.`;
 
     if (categoryName !== "" && !ifCategoryIsAlreadyExist) {
         categories.push({ name: categoryName, type: categoryType });
@@ -235,10 +248,12 @@ function addNewCategoryRow(categoryType) {
     var table = $('#tableContainer table tbody');
     var placeholder = categoryType === 'income' ? 'Add new income category name' : 'Add new expense category name';
     var typeId = categoryType === 'income' ? 'newCategoryName' : 'newExpenseName';
-    var newRowHTML = '<tr><td colspan = "' + monthNumber + '"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '"  onkeypress="return isNotNumber(event)"></td>';
+    var newRowHTML = '<tr><td class="addCategorytd" colspan="' + (monthNumber + 1) + '" style="position: -webkit-sticky; position: sticky; left: 0; background-color: #fff; z-index: 10; border-right: 1px solid #ccc;"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '" onkeypress="return isNotNumber(event)" ></td></tr>';
+
     table.append(newRowHTML);
 
     return newRowHTML;
+
 }
 
 function delCategory() {
@@ -536,11 +551,17 @@ function ShowActivity() {
 
     activities = activities.reverse();
 
+    $('#tableWrapper').css("height", "335px");
+
+    $('#activityList').addClass('activityCheck');
+
     var activityListHTML = `
-        <div style='height: 250px; margin: 0 -150px; width: 1600px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;' class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded'>
-            <div class='d-flex justify-content-between align-items-center mb-4'>
-                <h4 class='text-primary text-center mb-0'>Activity List</h4>
-                <button data-toggle="tooltip" data-placement="top" title="Close" type='button' id='closeActivityButton' class='btn btn-danger btn-close'></button>
+        <div class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded shadow-sm' style='height: 335px; margin: 0 -150px; width: 1600px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;'>
+            <div class='d-flex justify-content-between text-center align-items-center mb-4 ms-3'>
+                <h4 class='text-info activityTitle  mb-0'>Activity List</h4>
+                <button data-toggle="tooltip" data-placement="top" title="Close" type='button' id='closeActivityButton' class='btn btn-outline-danger p-1 me-1'>
+                    <i class="bi bi-x"></i>
+                </button>
             </div>
     `;
 
@@ -548,16 +569,16 @@ function ShowActivity() {
 
     activities.forEach(function (activity) {
         activityListHTML += `
-            <div class='card mb-2 shadow-sm'>
-                <div class='card-body p-2'>
-                    <p class='card-text' style='font-size: 0.9rem;'>${activity}</p>
-                </div>
+        <div class='card mb-2 shadow-sm rounded-3 mx-3 card-hover'>
+            <div class='card-body p-2'>
+                <p class='card-text text-muted' style='font-size: 0.9rem;'>${activity}</p>
             </div>
-        `;
+        </div>
+    `;
     });
 
     $("#mainTable").find("input, button, textarea, select").attr("disabled", "disabled");
-        
+
     activityListHTML += "</div>";
 
     $("#activityList").html(activityListHTML);
@@ -565,7 +586,13 @@ function ShowActivity() {
     activities = activities.reverse();
 }
 
+
+
 function CloseActivity() {
+    $('#tableWrapper').css("height", "670px");
+
+    $('#activityList').removeClass('activityCheck');
+
     $('#showActivity').show();
 
     $("#mainTable").find("input,button,textarea,select").removeAttr("disabled");

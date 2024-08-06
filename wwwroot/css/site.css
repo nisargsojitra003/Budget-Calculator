@@ -1,19 +1,96 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
-@media (min-width: 768px) {
-  html {
+* {
+    font-size: 100%;
+    font-family: Arial;
+}
+
+.highlight {
+    background-color: lightgray;
+}
+
+.activityTitle {
+    text-align: center;
+    background: linear-gradient(to left, violet, indigo, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+#closeActivityButton {
+    height: 35px;
+    width: 35px;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background-color: aliceblue;
+}
+
+
+input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button {
+    display: none;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    color: #3498db;
+    cursor: pointer;
+}
+
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    color: #2c3e50;
+    font-family: "Helvetica", Arial, sans-serif;
     font-size: 16px;
-  }
+    border: 2px solid #bdc3c7;
+    border-radius: 5px;
+    background: #ecf0f1;
+    padding: 10px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+    input[type="date"]:focus {
+        color: #2c3e50;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        outline: none;
+    }
+
+    input[type="date"]::placeholder {
+        color: #7f8c8d;
+        opacity: 1;
+    }
+
+    input[type="date"]:disabled {
+        background-color: #ecf0f1;
+        color: #7f8c8d;
+    }
+
+input[type="date"] {
+    margin-bottom: 15px;
+}
+
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
 }
 
 input[type='number'] {
-    width: 100px;
-} 
+    width: 130px;
+}
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 /*table {
@@ -28,13 +105,131 @@ th {
     z-index: 100;
 }*/
 
-#mainTable thead th {
-    /*position: -webkit-sticky;*/
-    position: sticky;
-    top: 0;
-    background-color: #fff; 
-    z-index: 10;
+/* Main Table Styling */
+#mainTable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(255, 255, 255, 0.9);
+    overflow-y: auto;
 }
+
+    #mainTable th, #mainTable td {
+        text-align: center;
+        border: 1px solid #ccc;
+        background-color: #2670B4;
+    }
+
+    #mainTable thead tr {
+        position: sticky;
+        top: 0;
+        background-color: #007bff;
+        color: white;
+        z-index: 10;
+    }
+
+    #mainTable td {
+        background-color: #f9f9f9;
+    }
+
+    #mainTable input[type="number"] {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 120px;
+        box-sizing: border-box;
+    }
+
+    #mainTable .addCategorytd {
+        background-color: #e9ecef;
+        font-weight: bold;
+        text-align: left;
+    }
+
+        #mainTable .addCategorytd input[type="text"] {
+            border: 1px solid #2670B4;
+            position: sticky;
+            left: 0;
+            padding: 5px;
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            z-index: 5;
+            width: auto;
+        }
+
+    #mainTable td:first-child,
+    #mainTable th:first-child {
+        position: -webkit-sticky;
+        position: sticky;
+        left: 0;
+        background-color: #e9ecef; 
+        z-index: 5;
+        color:black;
+    }
+
+    #mainTable .staticRow {
+        position: -webkit-sticky;
+        position: sticky;
+        left: 0;
+        background-color: #e9ecef;
+        z-index: 5; 
+        font-weight: bold; 
+    }
+
+
+    #mainTable .delete-category-button {
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+
+
+/* Button Styling */
+button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#generateBtn.generateTable {
+    background-color: #2670B4;
+    color: white;
+}
+
+#generateBtn.resetTable {
+    background-color: #dc3545;
+    color: white;
+}
+
+#showActivity, #exportBtn {
+    background-color: #2670B4;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+/* Activity List Styling */
+/*#activityList {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+}
+
+.activity-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }*/
 
 .custom-scrollbar {
     scrollbar-width: thin;
@@ -62,13 +257,15 @@ th {
 
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-    margin-bottom: 60px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background-image: url('https://localhost:44342/images/background_image.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: 'Roboto', sans-serif;
 }
 
 .custom-menu {

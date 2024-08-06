@@ -5,16 +5,16 @@
 }
 <div class="container mt-3">
     <div class="row">
-        <div class="col-12 text-center text-info mb-4">
+        <div class="col-12 activityTitle mb-4">
             <h3>Budget Calculator</h3>
         </div>
         <div class="col-md-4 mb-3">
-            <input type="date" class="form-control" id="fromDate" name="fromDate" placeholder="From Date" required>
+            <input type="date" class="form-control custom-date-input" id="fromDate" name="fromDate" placeholder="From Date" required>
         </div>
         <div class="col-md-4 mb-3">
-            <input type="date" class="form-control" id="toDate" name="toDate" placeholder="To Date" required>
+            <input type="date" class="form-control custom-date-input" id="toDate" name="toDate" placeholder="To Date" required>
         </div>
-        <div class="col-md-4 mb-3 d-flex justify-content-center align-items-center">
+        <div class="col-md-4 mb-4 d-flex justify-content-center align-items-center">
             <button type="button" id="generateBtn" class="btn btn-primary generateTable me-2">Generate</button>
             <button data-toggle="tooltip" data-placement="top" title="Export" style="display:none" id="exportBtn" onclick="ExportTable()" type="button" class="btn btn-success me-2">
                 <i class="fa-solid fa-file-export"></i>
@@ -30,7 +30,7 @@
 <ul class='custom-menu'>
     <li data-action="first">Apply to all</li>
 </ul>
-<div id="activityList" class="mt-5"></div>
+<div id="activityList" class="mt-1"></div>
 
-<div id="tableContainer" class="mt-5">
+<div id="tableContainer" class="mt-4">
 </div>
