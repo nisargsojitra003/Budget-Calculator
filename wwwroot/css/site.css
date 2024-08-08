@@ -137,7 +137,7 @@ th {
 }
 
     #mainTable th, #mainTable td {
-        text-align: left;
+        text-align: center; /* Default alignment */
         border: 1px solid #ccc;
         background-color: #2670B4;
     }
@@ -149,10 +149,6 @@ th {
         color: white;
         z-index: 10;
     }
-
-    /*#mainTable td {
-        background-color: #f9f9f9;
-    }*/
 
     #mainTable td {
         background-color: #f0fafe;
@@ -186,16 +182,30 @@ th {
             width: auto;
         }
 
-    #mainTable .staticRow span {
+        th, td {
+            white-space: nowrap; 
+        }
+
+    #mainTable .staticRow {
         text-align: left;
+        position: -webkit-sticky;
         position: sticky;
         left: 0;
-        padding: 3px;
-        border-radius: 5px;
-        box-sizing: border-box;
+        background-color: #f4fcff;
         z-index: 5;
-        width: auto;
+        font-weight: bold;
     }
+
+        #mainTable .staticRow span {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            padding: 3px;
+            border-radius: 5px;
+            box-sizing: border-box;
+            z-index: 5;
+            width: auto;
+        }
 
     #mainTable .totalRows span {
         text-align: center !important;
@@ -211,21 +221,9 @@ th {
         color: black;
     }
 
-    #mainTable .staticRow {
-        position: -webkit-sticky;
-        position: sticky;
-        left: 0;
-        background-color: #f4fcff;
-        z-index: 5;
-        font-weight: bold;
-    }
-
-
     #mainTable .delete-category-button {
         padding: 5px 10px;
     }
-
-
 
 /* Button Styling */
 button {
