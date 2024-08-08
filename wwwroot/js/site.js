@@ -8,21 +8,27 @@ $(document).on('click', '#showActivity', ShowActivity);
 $(document).on('click', '#closeActivityButton', CloseActivity);
 $(document).on('click', '.delete-category-button', delCategory);
 
-var imageUrl = 'https://localhost:44342/images/background_image.jpg';
-
-$('body').css('background-image', 'url(' + imageUrl + ')');
 var monthNumber = undefined;
 var months = undefined;
 var tableHTML = undefined;
 
-$(document).on("click", "#tableContainer", ReadOnlyMode);
+let timeOfToast = true;
+
+$(document).on("click", "#tableContainer", function () {
+    if (timeOfToast) {
+        ReadOnlyMode();
+        timeOfToast = false;
+        setTimeout(function () {
+            timeOfToast = true;
+        }, 10000);
+    }
+});
 
 function ReadOnlyMode() {
     if ($('#activityList').hasClass('activityCheck')) {
         toastr.error("Calculator is in read-only mode, Close the activity list to edit.");
     }
 }
-
 
 function toggleTable() {
     $('#generateBtn').hasClass('generateTable') ? generateTable() : resetTable();
@@ -62,16 +68,18 @@ function generateTable() {
         month.setMonth(month.getMonth() + 1);
     }
 
-    tableHTML = '<table style="background-image: url(' + imageUrl + ')" id="mainTable" class="table table-bordered mt-2 shadow p-3 bg-white rounded"><thead><tr><th>Category</th>';
+    tableHTML = '<table id="mainTable" class="table table-bordered mt-2 shadow-lg p-3 bg-white rounded"><thead><tr><th>Category</th>';
 
     months.forEach(function (month) {
         var monthName = month.toLocaleString('default', { month: 'short', year: 'numeric' });
-        tableHTML += '<th>' + monthName + '</th>';
+        tableHTML += '<th style="text-align: center !important">' + monthName + '</th>';
     });
 
     tableHTML += '</tr></thead><tbody>';
 
-    tableHTML += '<tr><td class="staticRow" colspan="' + months.length + 2 + '">Income</td></tr>'
+    var colSpan = parseFloat(months.length) + 2;
+
+    tableHTML += '<tr><td class="staticRow" colspan="' + colSpan + '"><span>Income</span></td></tr>'
 
     monthNumber = months.length + 1;
 
@@ -79,7 +87,7 @@ function generateTable() {
 
     tableHTML += addNewCategoryRow('income');
 
-    tableHTML += '<tr><td class="staticRow" colspan="' + months.length + 2 + '">Expense</td></tr>'
+    tableHTML += '<tr><td class="staticRow" colspan="' + colSpan + '"><span>Expense</span></td></tr>'
 
     AddFilterCategory('expense')
 
@@ -159,6 +167,7 @@ function generateTable() {
     });
 
     calculateTotals();
+    //
 }
 
 function addCategory(categoryNameText, categoryType) {
@@ -191,7 +200,7 @@ function AddFilterCategory(categoryType) {
 function CommonTrTd(name, title) {
     tableHTML += '<tr><td><strong>' + name + '</strong></td>';
     months.forEach(function () {
-        tableHTML += '<td><span class="' + title + '">0</span></td>';
+        tableHTML += '<td><span class="' + title + ' totalRows">0</span></td>';
     });
     tableHTML += '</tr>';
 }
@@ -246,9 +255,9 @@ function appendCategoryRow(categoryName, categoryType) {
 
 function addNewCategoryRow(categoryType) {
     var table = $('#tableContainer table tbody');
-    var placeholder = categoryType === 'income' ? 'Add new income category name' : 'Add new expense category name';
+    var placeholder = categoryType === 'income' ? 'Add new income category' : 'Add new expense category';
     var typeId = categoryType === 'income' ? 'newCategoryName' : 'newExpenseName';
-    var newRowHTML = '<tr><td class="addCategorytd" colspan="' + (monthNumber + 1) + '" style="position: -webkit-sticky; position: sticky; left: 0; background-color: #fff; z-index: 10; border-right: 1px solid #ccc;"><input type="text" id="' + typeId + '" placeholder="' + placeholder + '" onkeypress="return isNotNumber(event)" ></td></tr>';
+    var newRowHTML = '<tr><td class="addCategorytd" colspan="' + (monthNumber + 1) + '" ><input type="text" id="' + typeId + '" placeholder="' + placeholder + '" onkeypress="return isNotNumber(event)" ></td></tr>';
 
     table.append(newRowHTML);
 
@@ -419,10 +428,6 @@ $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
 });
 
-//window.onbeforeunload = function () {
-//    return "Data will be lost if you leave the page, are you sure?";
-//};
-
 function getMonthName(monthNumber) {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -539,11 +544,14 @@ function resetTable() {
         toDatePicker.prop('disabled', false);
         $('#showActivity').css('display', 'none');
         $('#exportBtn').css('display', 'none');
+        $('#tableWrapper').empty();
+        $('#activityList').empty();
+        $('#generateBtn').removeClass('resetTable').addClass('generateTable').html('Generate');
 
         months = [];
         categories = [];
         activities = [];
-        window.location.reload();
+        //window.location.reload();
     }
 }
 
@@ -556,9 +564,9 @@ function ShowActivity() {
     $('#activityList').addClass('activityCheck');
 
     var activityListHTML = `
-        <div class='activity-box custom-scrollbar mt-1 p-1 bg-light rounded shadow-sm' style='height: 335px; margin: 0 -150px; width: 1600px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc;'>
-            <div class='d-flex justify-content-between text-center align-items-center mb-4 ms-3'>
-                <h4 class='text-info activityTitle  mb-0'>Activity List</h4>
+        <div class='activity-box custom-scrollbar bg-light rounded shadow-lg' style='height: 335px; margin: 0 -150px; width: 1600px; overflow-y: auto; overflow-x: auto; border: 1px solid #ccc; background-color: #f4fcff !important;'>
+            <div class='d-flex activityListHeader justify-content-between text-center align-items-center ms-3'>
+                <h4 class='text-info activityTitle  mb-0'><strong>Activity List</strong></h4>
                 <button data-toggle="tooltip" data-placement="top" title="Close" type='button' id='closeActivityButton' class='btn btn-outline-danger p-1 me-1'>
                     <i class="bi bi-x"></i>
                 </button>
@@ -567,13 +575,14 @@ function ShowActivity() {
 
     $('#showActivity').hide();
 
-    activities.forEach(function (activity) {
+    activities.forEach(function (activity, index) {
+        let cardClass = (index % 2 === 0) ? 'even-card' : 'odd-card';
         activityListHTML += `
-        <div class='card mb-2 shadow-sm rounded-3 mx-3 card-hover'>
-            <div class='card-body p-2'>
-                <p class='card-text text-muted' style='font-size: 0.9rem;'>${activity}</p>
-            </div>
+    <div class='card mb-2 shadow-sm rounded-3 mx-3 card-hover ${cardClass}'>
+        <div class='card-body p-2'>
+            <p class='card-text activityP' style='font-size: 0.9rem;'>${activity}</p>
         </div>
+    </div>
     `;
     });
 
@@ -586,8 +595,6 @@ function ShowActivity() {
     activities = activities.reverse();
 }
 
-
-
 function CloseActivity() {
     $('#tableWrapper').css("height", "670px");
 
@@ -599,3 +606,7 @@ function CloseActivity() {
 
     $('#activityList').empty();
 }
+
+//window.onbeforeunload = function () {
+//    return "Are you sure you want to reset this page? Once confirmed, you will not be able to undo this action.";
+//};

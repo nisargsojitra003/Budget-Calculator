@@ -14,21 +14,30 @@ html {
 .activityTitle {
     text-align: center;
     background: linear-gradient(to left, violet, indigo, blue, green, yellow, orange, red);
+    /*background-size: 70%;*/
     -webkit-background-clip: text;
     color: transparent;
 }
 
 #closeActivityButton {
-    height: 35px;
-    width: 35px;
+    height: 33px;
+    width: 33px;
 }
 
-.card-hover:hover {
-    transform: translateY(-5px);
-    transition: transform 0.3s ease-in-out;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    background-color: aliceblue;
+.card-hover {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid transparent;
 }
+
+    .card-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border: 1px solid #2670b4;
+        filter: brightness(1.05);
+        cursor: pointer;
+    }
 
 
 input[type="date"]::-webkit-clear-button {
@@ -52,7 +61,7 @@ input[type="date"] {
     font-size: 16px;
     border: 2px solid #bdc3c7;
     border-radius: 5px;
-    background: #ecf0f1;
+    background: transparent;
     padding: 10px;
     transition: border-color 0.3s, box-shadow 0.3s;
 }
@@ -89,6 +98,11 @@ input[type='number'] {
     width: 130px;
 }
 
+/*span {
+    text-align: center !important;
+    margin-left: 3rem;
+}*/
+
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
@@ -105,6 +119,15 @@ th {
     z-index: 100;
 }*/
 
+.activityListHeader {
+    position: sticky;
+    top: 0;
+    background-color: #f4fcff;
+    z-index: 10;
+    margin-right: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px
+}
 /* Main Table Styling */
 #mainTable {
     width: 100%;
@@ -114,7 +137,7 @@ th {
 }
 
     #mainTable th, #mainTable td {
-        text-align: center;
+        text-align: left;
         border: 1px solid #ccc;
         background-color: #2670B4;
     }
@@ -127,8 +150,13 @@ th {
         z-index: 10;
     }
 
-    #mainTable td {
+    /*#mainTable td {
         background-color: #f9f9f9;
+    }*/
+
+    #mainTable td {
+        background-color: #f0fafe;
+        /*border: 1px solid #2670B4;*/
     }
 
     #mainTable input[type="number"] {
@@ -136,10 +164,12 @@ th {
         border-radius: 5px;
         width: 120px;
         box-sizing: border-box;
+        background-color: #f4fcff;
+        text-align: center;
     }
 
     #mainTable .addCategorytd {
-        background-color: #e9ecef;
+        background-color: #f4fcff;
         font-weight: bold;
         text-align: left;
     }
@@ -151,34 +181,48 @@ th {
             padding: 5px;
             border-radius: 5px;
             box-sizing: border-box;
-            background-color: #f9f9f9;
+            background-color: #f4fcff;
             z-index: 5;
             width: auto;
         }
+
+    #mainTable .staticRow span {
+        text-align: left;
+        position: sticky;
+        left: 0;
+        padding: 3px;
+        border-radius: 5px;
+        box-sizing: border-box;
+        z-index: 5;
+        width: auto;
+    }
+
+    #mainTable .totalRows span {
+        text-align: center !important;
+    }
 
     #mainTable td:first-child,
     #mainTable th:first-child {
         position: -webkit-sticky;
         position: sticky;
         left: 0;
-        background-color: #e9ecef; 
+        background-color: #f4fcff;
         z-index: 5;
-        color:black;
+        color: black;
     }
 
     #mainTable .staticRow {
         position: -webkit-sticky;
         position: sticky;
         left: 0;
-        background-color: #e9ecef;
-        z-index: 5; 
-        font-weight: bold; 
+        background-color: #f4fcff;
+        z-index: 5;
+        font-weight: bold;
     }
 
 
     #mainTable .delete-category-button {
         padding: 5px 10px;
-        border-radius: 5px;
     }
 
 
@@ -209,6 +253,19 @@ button {
 
 button:hover {
     opacity: 0.8;
+}
+
+.activity-box {
+    background-color: #f4fcff;
+}
+
+/*Activity card css*/
+.even-card {
+    background-color: #eaf9fe; 
+}
+
+.odd-card {
+    background-color: #f4fcff;
 }
 
 /* Activity List Styling */
