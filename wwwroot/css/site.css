@@ -152,6 +152,7 @@ th {
 
     #mainTable td {
         background-color: #f0fafe;
+        vertical-align: middle;
         /*border: 1px solid #2670B4;*/
     }
 
@@ -172,9 +173,10 @@ th {
 
         #mainTable .addCategorytd input[type="text"] {
             border: 1px solid #2670B4;
+            padding-left: 15px;
             position: sticky;
             left: 0;
-            padding: 5px;
+            padding: 4px;
             border-radius: 5px;
             box-sizing: border-box;
             background-color: #f4fcff;
@@ -198,6 +200,7 @@ th {
 
         #mainTable .staticRow span {
             text-align: left;
+            vertical-align: middle;
             position: sticky;
             left: 0;
             padding: 3px;
@@ -354,6 +357,16 @@ input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
+.swal2-confirm {
+    height: 40px !important;
+    text-align: center !important;
+}
+
+.swal2-cancel {
+    height: 40px !important;
+    background-color: #2670B4 !important;
+    text-align: center !important;
+}
 /*#exportBtn {
     display: none;
 }*/

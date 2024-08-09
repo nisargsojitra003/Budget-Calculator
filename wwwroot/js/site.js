@@ -13,6 +13,7 @@ var months = undefined;
 var tableHTML = undefined;
 
 let timeOfToast = true;
+var isExportIsLastAction = false;
 
 $(document).on("click", "#tableContainer", function () {
     if (timeOfToast) {
@@ -75,7 +76,7 @@ function generateTable() {
         tableHTML += '<th style="text-align: center !important">' + monthName + '</th>';
     });
 
-    tableHTML += '</tr></thead><tbody>';
+    tableHTML += '</tr></thead><tbody><div>';
 
     var colSpan = parseFloat(months.length) + 2;
 
@@ -93,7 +94,7 @@ function generateTable() {
 
     tableHTML += addNewCategoryRow('expense');
 
-    tableHTML += '</tbody><tfoot>';
+    //tableHTML += '</tbody><tfoot>';
 
     CommonTrTd('Total Income', 'total-income');
 
@@ -106,10 +107,9 @@ function generateTable() {
     CommonTrTd('Closing Balance', 'closing-balance');
 
     tableHTML += '</tr>';
-    tableHTML += '</tfoot></table>';
+    tableHTML += '</div></tbody></table>';
 
     $('#tableContainer').html('<div id="tableWrapper" class="custom-scrollbar table-container" style="height: 670px; overflow-y: auto; margin: 0 -150px;">' + tableHTML + '</div>');
-
 
     activities.push(`${CurrentDateTimeInFormat()} | Budget has been generated : From Date = ${convertDateFormat(fromDate)} , To Date = ${convertDateFormat(toDate)}.`);
     $('#newCategoryName, #newExpenseName').on('keydown', function (o) {
@@ -135,6 +135,7 @@ function generateTable() {
         category = $(this).data('name');
         value = $(this).val();
         timeStamp = CurrentDateTimeInFormat();
+        isExportIsLastAction = false;
         categoryType = $(this).data('category');
         monthName = getMonthName($(this).data('month'));
         year = $(this).data('year');
@@ -167,7 +168,6 @@ function generateTable() {
     });
 
     calculateTotals();
-    //
 }
 
 function addCategory(categoryNameText, categoryType) {
@@ -180,6 +180,7 @@ function addCategory(categoryNameText, categoryType) {
         categories.push({ name: categoryName, type: categoryType });
         activities.push(addActivity);
         appendCategoryRow(categoryName, categoryType);
+        isExportIsLastAction = false;
     } else {
         toastr.error('Entered Category is already exist')
     }
@@ -265,23 +266,6 @@ function addNewCategoryRow(categoryType) {
 
 }
 
-function delCategory() {
-    var CategoryName = $(this).data('category');
-    var categoryType = $(this).data('type');
-    var timeStamp = CurrentDateTimeInFormat();
-
-    var deleteConfirmation = confirm(`Are you sure, you want to delete the category "${CategoryName}" ?`);
-    if (deleteConfirmation) {
-        categories = categories.filter(function (obj) {
-            return obj.name !== CategoryName;
-        });
-        activities.push(`${timeStamp} | ${categoryType} category has been deleted: ${CategoryName}`);
-        $(this).closest('tr').remove();
-        calculateTotals();
-        toastr.error(`${CategoryName} category is deleted successfully!`)
-    }
-}
-
 function calculateTotals() {
     var monthsCount = $('#tableContainer thead th').length - 1;
 
@@ -345,7 +329,6 @@ $(document).on('focusout', 'input[type="number"]', function () {
 });
 
 function ExportTable() {
-    var tab_text = "<table><tr>";
     var tab = document.getElementById('mainTable');
 
     if (!tab || !tab.rows) {
@@ -353,65 +336,49 @@ function ExportTable() {
         return;
     }
 
-    tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, "");
-    tab_text = tab_text.replace(/<img[^>]*>/gi, "");
-    tab_text = tab_text.replace(/<button[^>]*>|<\/button>/gi, "");
+    isExportIsLastAction = true;
 
+    var data = [];
     for (var j = 0; j < tab.rows.length; j++) {
-        var row = tab.rows[j];
-        tab_text += "<tr>";
-
-        for (var k = 0; k < row.cells.length; k++) {
-            var cell = row.cells[k];
+        var row = [];
+        for (var k = 0; k < tab.rows[j].cells.length; k++) {
+            var cell = tab.rows[j].cells[k];
             var cellHtml = cell.innerHTML;
 
-            var inputs = cell.getElementsByTagName('input');
+            cellHtml = cellHtml.replace(/<span[^>]*>|<\/span>/g, "");
+            cellHtml = cellHtml.replace(/<button[^>]*>|<\/button>/g, "");
+            cellHtml = cellHtml.replace(/<strong[^>]*>|<\/strong>/g, "");
 
-            for (var i = 0; i < inputs.length; i++) {
-                var input = inputs[i];
-                if (input.type === 'number' || input.type === 'text') {
-                    cellHtml = input.value;
-                }
+            var inputs = cell.getElementsByTagName('input');
+            if (inputs.length > 0) {
+                cellHtml = inputs[0].value;
             }
 
-            cellHtml = cellHtml.replace(/Delete/gi, '');
-
-            tab_text += "<td>" + cellHtml + "</td>";
+            row.push(cellHtml.replace(/Delete/gi, ''));
         }
-        tab_text += "</tr>";
+        data.push(row);
     }
 
-    tab_text += "</table>";
+    var wb = XLSX.utils.book_new();
 
-    var ua = window.navigator.userAgent;
+    var ws1 = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws1, "Main Table");
+
+    var activitiesData = [];
+
+    activitiesData.push(['Activity:']);
+
+    activities.forEach(function (activity) {
+        activitiesData.push([activity]);
+    });
+
+    var ws2 = XLSX.utils.aoa_to_sheet(activitiesData);
+    XLSX.utils.book_append_sheet(wb, ws2, "Activity List");
+
     var excelSheetName = ExcelSheetName();
-    var msie = ua.indexOf("MSIE");
+    XLSX.writeFile(wb, excelSheetName + ".xlsx");
 
-    // If Internet Explorer or Edge
-    if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./) || !!navigator.userAgent.match(/Edge\/\d+/)) {
-        var txtArea1 = document.createElement('iframe');
-        txtArea1.style.display = 'none';
-        document.body.appendChild(txtArea1);
-        var doc = txtArea1.contentDocument || txtArea1.contentWindow.document;
-        doc.open("txt/html", "replace");
-        doc.write(tab_text);
-        doc.close();
-        doc.execCommand("SaveAs", true, excelSheetName);
-        document.body.removeChild(txtArea1);
-        toastr.success('File generated successfully!');
-    } else {
-        var blob = new Blob([tab_text], { type: "application/vnd.ms-excel" });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = excelSheetName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toastr.success('File generated successfully!');
-    }
-    return true;
+    toastr.success('File generated successfully!');
 }
 
 $(document).on("contextmenu", "#inptype[type=number]", function (event) {
@@ -529,21 +496,87 @@ function ExcelSheetName() {
     return sheetName;
 }
 
+
+function handleSweetAlert(actionType, additionalData) {
+    let swalOptions = {
+        icon: 'warning',
+        showCancelButton: true,
+        allowOutsideClick: false,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        customClass: 'swal-alert',
+        position: 'top'
+    };
+
+    switch (actionType) {
+        case 'deleteCategory':
+            const { CategoryName, categoryType, timeStamp } = additionalData;
+            swalOptions.text = `Are you sure you want to delete "${CategoryName}" category?`;
+            swalOptions.confirmButtonText = 'Delete';
+            break;
+
+        case 'resetTable':
+            swalOptions.text = `On "Confirm", Calculator will be reset and you will loose the entered data. Please export the data before reset!`;
+            swalOptions.icon = 'question';
+            swalOptions.confirmButtonText = 'Confirm';
+            break;
+    }
+
+    Swal.fire(swalOptions).then((result) => {
+        if (result.isConfirmed) {
+            switch (actionType) {
+                case 'deleteCategory':
+                    const { CategoryName, categoryType, timeStamp, context } = additionalData;
+                    categories = categories.filter(function (obj) {
+                        return obj.name !== CategoryName;
+                    });
+                    activities.push(`${timeStamp} | ${categoryType} category has been deleted: ${CategoryName}`);
+                    $(context).closest('tr').remove();
+                    isExportIsLastAction = false;
+                    calculateTotals();
+                    toastr.error(`${CategoryName} category is deleted successfully`);
+                    break;
+
+                case 'resetTable':
+                    $('#fromDate').val('').prop('disabled', false);
+                    $('#toDate').val('').prop('disabled', false);
+                    $('#showActivity').hide();
+                    $('#exportBtn').hide();
+                    $('#tableWrapper').empty();
+                    $('#activityList').empty();
+                    $('#generateBtn').removeClass('resetTable').addClass('generateTable').html('Generate');
+
+                    months = [];
+                    categories = [];
+                    activities = [];
+                    break;
+            }
+        }
+    });
+}
+
+function delCategory() {
+    var CategoryName = $(this).data('category');
+    var categoryType = $(this).data('type');
+    var timeStamp = CurrentDateTimeInFormat();
+
+    handleSweetAlert('deleteCategory', {
+        CategoryName: CategoryName,
+        categoryType: categoryType,
+        timeStamp: timeStamp,
+        context: this
+    });
+}
+
 function resetTable() {
-
-    var confirmationOfReset = confirm("Are you sure you want to reset this page? Once confirmed, you will not be able to undo this action.")
-
-    if (confirmationOfReset) {
-        var fromDatePicker = $("#fromDate");
-        var toDatePicker = $("#toDate");
-        $('#showActivity').show();
-
-        fromDatePicker.val('');
-        toDatePicker.val('');
-        fromDatePicker.prop('disabled', false);
-        toDatePicker.prop('disabled', false);
-        $('#showActivity').css('display', 'none');
-        $('#exportBtn').css('display', 'none');
+    if (!isExportIsLastAction) {
+        handleSweetAlert('resetTable');
+    }
+    else {
+        $('#fromDate').val('').prop('disabled', false);
+        $('#toDate').val('').prop('disabled', false);
+        $('#showActivity').hide();
+        $('#exportBtn').hide();
         $('#tableWrapper').empty();
         $('#activityList').empty();
         $('#generateBtn').removeClass('resetTable').addClass('generateTable').html('Generate');
@@ -551,7 +584,6 @@ function resetTable() {
         months = [];
         categories = [];
         activities = [];
-        //window.location.reload();
     }
 }
 
@@ -607,6 +639,6 @@ function CloseActivity() {
     $('#activityList').empty();
 }
 
-//window.onbeforeunload = function () {
-//    return "Are you sure you want to reset this page? Once confirmed, you will not be able to undo this action.";
-//};
+window.onbeforeunload = function () {
+    return "are you sure you want to reset this page? once confirmed, you will not be able to undo this action.";
+};
